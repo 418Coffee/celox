@@ -1,8 +1,9 @@
+from typing import Final
 from .util import FrozenOrderedDict
 from .timeout import Timeout
 from . import __version__
 
-USER_AGENT: str = f"celer/{__version__}"
+USER_AGENT: Final[str] = f"celer/{__version__}"
 
 DEFAULT_HEADERS: FrozenOrderedDict = FrozenOrderedDict({
     "Host": "",
@@ -10,4 +11,4 @@ DEFAULT_HEADERS: FrozenOrderedDict = FrozenOrderedDict({
     "Accept": "*/*",
 })
 
-DEFAULT_TIMEOUT: Timeout = Timeout(total=5)
+DEFAULT_TIMEOUT: Final[Timeout] = Timeout(total=5)
