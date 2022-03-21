@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 import functools
 import re
 import ssl
@@ -46,7 +46,7 @@ def create_ssl_context(ssl_skip_verify: bool = False) -> ssl.SSLContext:
     ssl_context.load_default_certs(ssl.Purpose.SERVER_AUTH)
     return ssl_context
 
-class frozendict(collections.Mapping):
+class frozendict(collections.abc.Mapping):
     """
     An immutable wrapper around dictionaries that implements the complete :py:class:`collections.Mapping`
     interface. It can be used as a drop-in replacement for dictionaries where immutability is desired.
