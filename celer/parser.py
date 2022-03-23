@@ -1,5 +1,10 @@
 from typing import Optional, Union
 
+import trio
+
+from .connection import DirectConnection, ProxyConnection
+from .response import Response
+
 
 class ReceiveBuffer:
 
@@ -48,9 +53,10 @@ class ReceiveBuffer:
         self.idx = 0
         return data
 
-class HTTPParser:
 
-    def __init__(self):
-        pass
+
+        
+
+        
 
             
