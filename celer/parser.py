@@ -1,18 +1,13 @@
-from typing import Optional, Union
-
-import trio
-
-from .connection import DirectConnection, ProxyConnection
-from .response import Response
-
+from typing import Union
 
 class ReceiveBuffer:
 
     __slots__: "tuple[str]" = ("_buf", "terminator", "idx", "max_frame_length")
 
-    def __init__(self, byteslike: Union[bytes, bytearray], terminator: bytes=b"\r\n\r\n", max_frame_length=65535) -> None:
+    def __init__(self, byteslike: Union[bytes, bytearray] = None, terminator: bytes=b"\r\n\r\n", max_frame_length=65535) -> None:
         self._buf = bytearray()
-        self._buf += byteslike
+        if byteslike:
+            self._buf += byteslike
         self.terminator = terminator
         self.max_frame_length = max_frame_length
         self.idx = 0
@@ -52,6 +47,9 @@ class ReceiveBuffer:
         # Set the search index to the beginning again.
         self.idx = 0
         return data
+
+    def close(self):
+        del self._buf[:]
 
 
 
