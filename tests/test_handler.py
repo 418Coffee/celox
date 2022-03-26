@@ -15,9 +15,9 @@ async def test_handler_closed_connection():
 
 async def test_handler():
     timeout = Timeout(5, 5, 5, 5)
-    conn = DirectConnection("httpbin.org", 80, create_ssl_context(), timeout)
+    conn = DirectConnection("www.google.com", 80, create_ssl_context(), timeout)
     await conn.connect_tcp()
     handler = HTTPHandler(conn)
-    url = yarl.URL("http://httpbin.org/")
-    request = make_request("GET", url, {"Host": "httpbin.org"}, None)
+    url = yarl.URL("http://www.google.com/")
+    request = make_request("GET", url, {"Host": "www.google.com"}, None)
     resp = await handler.write_request_read_response(request)
