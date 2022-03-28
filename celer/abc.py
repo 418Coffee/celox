@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from http.cookies import BaseCookie, Morsel
 from typing import TYPE_CHECKING, Iterable, Optional, Sized
 
@@ -12,8 +12,10 @@ else:
     IterableBase = Iterable
 
 
-class AbstractCookieJar(Sized, IterableBase):
+class AbstractCookieJar(Sized, IterableBase, metaclass=ABCMeta):
     """Abstract Cookie Jar"""
+
+    __slots__ = ()
 
     @abstractmethod
     def clear(self, predicate: Optional[ClearCookiePredicate] = None) -> None:
@@ -31,10 +33,12 @@ class AbstractCookieJar(Sized, IterableBase):
     def filter_cookies(self, request_url: URL) -> "BaseCookie[str]":
         """Return the jar's cookies filtered by their attributes."""
 
-class JsonEncoder(ABC):
+class JsonEncoder(metaclass=ABCMeta):
     """Abstract JSON Encoder"""
+
+    __slots__ = ()
 
     @abstractmethod
     def dumps(self) -> str:
-        """Serialize obj to a JSON formatted str"""
+        """Serialize obj to a JSON formatted str."""
         pass
