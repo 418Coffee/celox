@@ -2,7 +2,7 @@ import collections.abc
 import functools
 import re
 import ssl
-from typing import Optional, Pattern, Union
+from typing import Any, Callable, Generic, Optional, Pattern, Protocol, Type, TypeVar, Union
 import warnings
 
 from multidict import CIMultiDict
@@ -90,6 +90,43 @@ class FrozenOrderedDict(frozendict):
     """
 
     dict_cls = collections.OrderedDict
+
+_T = TypeVar("_T")
+
+
+class _TSelf(Protocol, Generic[_T]):
+    _cache: "dict[str, _T]"
+
+class reify(Generic[_T]):
+    """Use as a class method decorator.
+
+    It operates almost exactly like
+    the Python `@property` decorator, but it puts the result of the
+    method it decorates into the instance dict after the first call,
+    effectively replacing the function it decorates with an instance
+    variable.  It is, in Python parlance, a data descriptor.
+    """
+
+    def __init__(self, wrapped: Callable[..., _T]) -> None:
+        self.wrapped = wrapped
+        self.__doc__ = wrapped.__doc__
+        self.name = wrapped.__name__
+
+    def __get__(self, inst: _TSelf[_T], owner: Optional[Type[Any]] = None) -> _T:
+        try:
+            try:
+                return inst._cache[self.name]
+            except KeyError:
+                val = self.wrapped(inst)
+                inst._cache[self.name] = val
+                return val
+        except AttributeError:
+            if inst is None:
+                return self
+            raise
+
+    def __set__(self, inst: _TSelf[_T], value: _T) -> None:
+        raise AttributeError("reified property is read-only")
 
 _ipv4_pattern = (
     r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
