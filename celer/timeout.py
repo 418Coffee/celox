@@ -1,11 +1,11 @@
-import dataclasses
-from typing import Optional
+import attr
+from typing import Optional, Union
 
+_valid_types = (float, int, type(None))
 
-@dataclasses.dataclass(frozen=True, repr=True)
+@attr.s(repr=True, slots=True)
 class Timeout:
-    total: Optional[float] = None
-    connect: Optional[float] = None
-    read: Optional[float] = None
-    write: Optional[float] = None
-
+    total: Optional[Union[float, int]] = attr.ib(default=None, validator=attr.validators.instance_of(_valid_types))
+    connect: Optional[Union[float, int]] = attr.ib(default=None, validator=attr.validators.instance_of(_valid_types))
+    read: Optional[Union[float, int]] = attr.ib(default=None, validator=attr.validators.instance_of(_valid_types))
+    write: Optional[Union[float, int]] = attr.ib(default=None, validator=attr.validators.instance_of(_valid_types))
