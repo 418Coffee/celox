@@ -13,12 +13,10 @@ def is_ssl(url: URL) -> bool:
         return True
     return False
 
-def add_default_headers_non_existing(headers: CIMultiDict, key: str, value: str) -> None:
-    # Is key already in dict?
+def set_value_non_existing(headers: CIMultiDict, key: str, value: str) -> None:
+    """Set value to the specified headers if key not in headers."""
     if key in headers:
-        # Yes, don't set it.
         return
-    # No, set it.
     headers[key] = value
 
 def create_ssl_context(ssl_skip_verify: bool = False) -> ssl.SSLContext:
@@ -92,7 +90,6 @@ class FrozenOrderedDict(frozendict):
     dict_cls = collections.OrderedDict
 
 _T = TypeVar("_T")
-
 
 class _TSelf(Protocol, Generic[_T]):
     _cache: "dict[str, _T]"
