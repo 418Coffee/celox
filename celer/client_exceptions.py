@@ -125,16 +125,6 @@ class MalformedResponse(ClientError):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} error={self.error}>"
 
-class InvalidHeader(MalformedResponse):
-    """Malformed HTTP header"""
-
-    __slots__: "tuple[str]" = ("header", "value")
-
-    def __init__(self, header: str, value: str) -> None:
-        self.header = header
-        self.value = value
-        super().__init__("Invalid HTTP header")
-
 class MaxRedirect(ClientError):
     """Maximum amount of redirects reached"""
 
