@@ -1,6 +1,6 @@
 from yarl import URL
 
-from .client_exceptions import InvalidProxy
+from .exceptions import InvalidProxy
 from .typedefs import ProxyLike
 
 
