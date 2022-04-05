@@ -3,13 +3,17 @@ from trio import TooSlowError
 
 class ClientError(Exception):
     """Base class for all client errors"""
+    __slots__: "tuple[str]" = ()
 
 class ConnectionError(Exception):
     """Base class for all connection errors"""
+    __slots__: "tuple[str]" = ()
 
 @final
 class UnclosedClient(ClientError, RuntimeError):
     """A client was not closed"""
+
+    __slots__: "tuple[str]" = ()
 
     def __str__(self) -> str:
         return "Unclosed client"
@@ -18,6 +22,8 @@ class UnclosedClient(ClientError, RuntimeError):
 class UnclosedConnection(ConnectionError, RuntimeError):
     """The underlying connection was not closed"""
 
+    __slots__: "tuple[str]" = ()
+
     def __str__(self) -> str:
         return "Unclosed connection"
 
@@ -25,11 +31,15 @@ class UnclosedConnection(ConnectionError, RuntimeError):
 class UnclosedResponse(ClientError, RuntimeError):
     """The response was not closed"""
 
+    __slots__: "tuple[str]" = ()
+
     def __str__(self) -> str:
         return "Unclosed response"
 
 class ConnectionTimeout(ConnectionError, TooSlowError):
     """The connect attempt exceeded the given timeout"""
+
+    __slots__: "tuple[str]" = ()
 
     def __str__(self) -> str:
         return "The server took too long to respond"
@@ -38,6 +48,8 @@ class ConnectionTimeout(ConnectionError, TooSlowError):
 class WriteTimeout(ConnectionError, TooSlowError):
     """The write attempt exceeded the given timeout"""
 
+    __slots__: "tuple[str]" = ()
+
     def __str__(self) -> str:
         return "Writing took too long"
 
@@ -45,12 +57,16 @@ class WriteTimeout(ConnectionError, TooSlowError):
 class ReadTimeout(ConnectionError, TooSlowError):
     """The read attempt exceeded the given timeout"""
 
+    __slots__: "tuple[str]" = ()
+
     def __str__(self) -> str:
         return "Reading took too long"
 
 @final
 class ProxyConnectionTimeout(ConnectionTimeout):
     """The proxy connect attempt exceeded the given timeout"""
+
+    __slots__: "tuple[str]" = ()
 
     def __str__(self) -> str:
         return "The proxy took too long to respond"
@@ -73,6 +89,13 @@ class ProxyError(ConnectionError):
     
     def __str__(self) -> str:
         return f"{self.status}: {self.status_code}"
+
+class ProxyConnectionError(ConnectionError):
+    """The proxy connect attempt failed"""
+
+    __slots__: "tuple[str]" = ()
+
+
 
 class ConnectionSSLError(ConnectionError):
 
@@ -97,12 +120,13 @@ class ConnectionSSLError(ConnectionError):
 class InvalidURL(ClientError, ValueError):
     """Malformed url"""
 
-    def __init__(self, url: Any) -> None:
-        super().__init__(url)
+    __slots__: "tuple[str]" = ("url",)
 
-    @property
-    def url(self) -> Any:
-        return self.args[0]
+    def __init__(self, url: Any) -> None:
+        self.url = url
+
+    def __str__(self) -> str:
+        return self.url
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.url}>"
@@ -110,6 +134,8 @@ class InvalidURL(ClientError, ValueError):
 @final
 class InvalidProxy(InvalidURL):
     """Malformed proxy"""
+
+    __slots__: "tuple[str]" = ()
 
 class MalformedResponse(ClientError):
     """Malformed HTTP response"""
