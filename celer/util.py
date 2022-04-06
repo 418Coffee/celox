@@ -1,14 +1,17 @@
+import collections
 import collections.abc
 import functools
 import re
 import ssl
-from typing import Any, Callable, Generic, Optional, Pattern, Protocol, Type, TypeVar, Union
 import warnings
+from typing import (Any, Callable, Generic, Mapping, Optional, Pattern,
+                    Protocol, Type, TypeVar, Union)
 
+import yarl
 from multidict import CIMultiDict
-from yarl import URL
 
-def is_ssl(url: URL) -> bool:
+
+def is_ssl(url: yarl.URL) -> bool:
     if url.port == 443 or url.scheme == "https":
         return True
     return False
@@ -144,7 +147,6 @@ _ipv6_regex = re.compile(_ipv6_pattern, flags=re.IGNORECASE)
 _ipv4_regexb = re.compile(_ipv4_pattern.encode("ascii"))
 _ipv6_regexb = re.compile(_ipv6_pattern.encode("ascii"), flags=re.IGNORECASE)
 
-
 def _is_ip_address(
     regex: Pattern[str], regexb: Pattern[bytes], host: Optional[Union[str, bytes]]
 ) -> bool:
@@ -157,10 +159,28 @@ def _is_ip_address(
     else:
         raise TypeError(f"{host} [{type(host)}] is not a str or bytes")
 
-
 is_ipv4_address = functools.partial(_is_ip_address, _ipv4_regex, _ipv4_regexb)
 is_ipv6_address = functools.partial(_is_ip_address, _ipv6_regex, _ipv6_regexb)
 
-
 def is_ip_address(host: Optional[Union[str, bytes, bytearray, memoryview]]) -> bool:
     return is_ipv4_address(host) or is_ipv6_address(host)
+
+__win_errors = frozendict({
+    10050: "Network is down", # WSAENETDOWN
+    10051: "Network is unreachable", # WSAENETUNREACH
+    10052: "Network dropped connection on reset", # WSAENETRESET
+    10053: "Software caused connection abort", # WSAECONNABORTED
+    10054: "An existing connection was forcibly closed by the remote host", # WSAECONNRESET
+    10055: "No buffer space available", # WSAENOBUFS
+    10060: "Connection timed out", # WSAETIMEDOUT
+    10061: "No connection could be made because the target computer actively refused it", # WSAECONNREFUSED
+})
+
+def winsock2strerror(__code: int) -> str:
+    """
+    Basically ``os.strerror`` but for Winsock2.h
+    Not all errors codes are supported, if ``__code`` is unknown the string literal "Unknown error" is returned.
+    More info: https://docs.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
+    """
+    # 
+    return __win_errors.get(__code, "Unknown error")
