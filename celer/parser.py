@@ -12,19 +12,6 @@ class ReceiveBuffer:
         self.max_frame_length = max_frame_length
         self.idx = 0
 
-    def __iadd__(self,  byteslike: Union[bytes, bytearray]) -> "ReceiveBuffer":
-        self._buf += byteslike
-        return self
-    
-    def __bool__(self) -> bool:
-        return bool(len(self))
-
-    def __len__(self) -> int:
-        return len(self._buf)
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} idx={self.idx} terminator={self.terminator} max_frame_length={self.max_frame_length}>"
-
     def read(self) -> Union[bytearray, None]:
         # Find is the next position of terminator in _buf, starting searching from idx.
         terminator_idx = self._buf.find(self.terminator, self.idx)
@@ -50,6 +37,21 @@ class ReceiveBuffer:
 
     def close(self):
         del self._buf[:]
+    
+    def __iadd__(self,  byteslike: Union[bytes, bytearray]) -> "ReceiveBuffer":
+        self._buf += byteslike
+        return self
+    
+    def __bool__(self) -> bool:
+        return bool(len(self))
+
+    def __len__(self) -> int:
+        return len(self._buf)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} idx={self.idx} terminator={self.terminator} max_frame_length={self.max_frame_length}>"
+
+
 
 
 
