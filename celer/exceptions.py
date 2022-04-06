@@ -62,6 +62,24 @@ class ReadTimeout(ConnectionError, TooSlowError):
     def __str__(self) -> str:
         return "Reading took too long"
 
+
+class ConnectionOSError(ConnectionError):
+    """The connect attempt failed"""
+
+    __slots__: "tuple[str]" = ("host", "port", "os_error")
+
+    def __init__(self, host: Any, port: Any, os_error: OSError) -> None:
+        self.host = host
+        self.port = port
+        self.os_error = os_error
+
+    def __str__(self) -> str:
+        return f"Cannot connect to host {self.host}:{self.port} [{self.os_error.errno}: {self.os_error.strerror}]"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} host={self.host} port={self.port} os_error={self.os_error}>"
+    
+
 @final
 class ProxyConnectionTimeout(ConnectionTimeout):
     """The proxy connect attempt exceeded the given timeout"""
@@ -75,27 +93,25 @@ class ProxyError(ConnectionError):
     """The proxy returned an unusual response"""
 
     __slots__: "tuple[str]" = (
-        "status_code",
         "status",
+        "reason"
     )
 
-    def __init__(self, status_code: int, status: str, *args: object) -> None:
-        self.status_code = status_code
+    def __init__(self, status: int, reason: str) -> None:
         self.status = status
-        super().__init__(*args)
+        self.reason = reason
+
+    def __str__(self) -> str:
+        return f"{self.status}: {self.reason}"
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} status_code={self.status_code} status={self.status}>"
+        return f"<{self.__class__.__name__} status={self.status} status={self.reason}>"
     
-    def __str__(self) -> str:
-        return f"{self.status}: {self.status_code}"
-
-class ProxyConnectionError(ConnectionError):
+@final
+class ProxyConnectionError(ConnectionOSError):
     """The proxy connect attempt failed"""
 
     __slots__: "tuple[str]" = ()
-
-
 
 class ConnectionSSLError(ConnectionError):
 
@@ -115,6 +131,12 @@ class ConnectionSSLError(ConnectionError):
 
     def __str__(self) -> str:
         return f"[{self.library}: {self.reason}]: {self.message}"
+
+@final
+class ProxyConnectionSSLError(ConnectionSSLError):
+    """The proxy connect attempt failed"""
+
+    __slots__: "tuple[str]" = ()
 
 
 class InvalidURL(ClientError, ValueError):
