@@ -8,7 +8,7 @@ from collections import defaultdict
 from http.cookies import BaseCookie, Morsel, SimpleCookie
 from typing import Iterator, Mapping, Optional, Union, cast
 
-from yarl import URL
+import yarl
 
 from .abc import AbstractCookieJar
 from .typedefs import ClearCookiePredicate, CookieLike, StrOrURL
@@ -58,13 +58,13 @@ class CookieJar(AbstractCookieJar):
         self._quote_cookie = quote_cookie
         if treat_as_secure_origin is None:
             treat_as_secure_origin = []
-        elif isinstance(treat_as_secure_origin, URL):
+        elif isinstance(treat_as_secure_origin, yarl.URL):
             treat_as_secure_origin = [treat_as_secure_origin.origin()]
         elif isinstance(treat_as_secure_origin, str):
-            treat_as_secure_origin = [URL(treat_as_secure_origin).origin()]
+            treat_as_secure_origin = [yarl.URL(treat_as_secure_origin).origin()]
         else:
             treat_as_secure_origin = [
-                URL(url).origin() if isinstance(url, str) else url.origin()
+                yarl.URL(url).origin() if isinstance(url, str) else url.origin()
                 for url in treat_as_secure_origin
             ]
         self._treat_as_secure_origin = treat_as_secure_origin
@@ -113,7 +113,7 @@ class CookieJar(AbstractCookieJar):
     def clear_domain(self, domain: str) -> None:
         self.clear(lambda x: self._is_domain_match(domain, x["domain"]))
 
-    def update_cookies(self, cookies: CookieLike, response_url: URL = URL()) -> None:
+    def update_cookies(self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()) -> None:
         """Update cookies."""
         hostname = response_url.raw_host
 
@@ -191,23 +191,23 @@ class CookieJar(AbstractCookieJar):
         self._do_expiration()
     
     def filter_cookies(
-        self, request_url: URL = URL()
+        self, request_url: yarl.URL = yarl.URL()
     ) -> Union["BaseCookie[str]", "SimpleCookie[str]"]:
         """Returns this jar's cookies filtered by their attributes."""
         self._do_expiration()
-        if not isinstance(request_url, URL):
+        if not isinstance(request_url, yarl.URL):
             warnings.warn(
                 "The method accepts yarl.URL instances only, got {}".format(
                     type(request_url)
                 ),
                 DeprecationWarning,
             )
-            request_url = URL(request_url)
+            request_url = yarl.URL(request_url)
         filtered: Union["SimpleCookie[str]", "BaseCookie[str]"] = (
             SimpleCookie() if self._quote_cookie else BaseCookie()
         )
         hostname = request_url.raw_host or ""
-        request_origin = URL()
+        request_origin = yarl.URL()
         with contextlib.suppress(ValueError):
             request_origin = request_url.origin()
 
@@ -383,8 +383,8 @@ class DummyCookieJar(AbstractCookieJar):
     def clear_domain(self, domain: str) -> None:
         pass
 
-    def update_cookies(self, cookies: CookieLike, response_url: URL = URL()) -> None:
+    def update_cookies(self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()) -> None:
         pass
 
-    def filter_cookies(self, request_url: URL) -> "BaseCookie[str]":
+    def filter_cookies(self, request_url: yarl.URL) -> "BaseCookie[str]":
         return SimpleCookie()

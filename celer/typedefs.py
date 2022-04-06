@@ -3,15 +3,15 @@ from http.cookies import BaseCookie, Morsel
 from ssl import SSLContext
 from typing import Any, Callable, Iterable, Mapping, Union
 
+import yarl
 from multidict import CIMultiDict, CIMultiDictProxy
 from trio import SocketStream, SSLStream
-from yarl import URL
 
 from .timeout import Timeout
 from .util import FrozenOrderedDict, frozendict
 
 # URL
-StrOrURL = Union[str, URL]
+StrOrURL = Union[str, yarl.URL]
 
 # Cookies
 CookieItem = Union[str, "Morsel[str]"]

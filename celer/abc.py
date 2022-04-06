@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from http.cookies import BaseCookie, Morsel
 from typing import TYPE_CHECKING, Iterable, Optional, Sized
 
-from yarl import URL
+import yarl
 
 from .typedefs import ClearCookiePredicate, CookieLike
 
@@ -26,11 +26,11 @@ class AbstractCookieJar(Sized, IterableBase, metaclass=ABCMeta):
         """Clear all cookies for domain and all subdomains."""
 
     @abstractmethod
-    def update_cookies(self, cookies: CookieLike, response_url: URL = URL()) -> None:
+    def update_cookies(self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()) -> None:
         """Update cookies."""
 
     @abstractmethod
-    def filter_cookies(self, request_url: URL) -> "BaseCookie[str]":
+    def filter_cookies(self, request_url: yarl.URL) -> "BaseCookie[str]":
         """Return the jar's cookies filtered by their attributes."""
 
 class JsonEncoder(metaclass=ABCMeta):

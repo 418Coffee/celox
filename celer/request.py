@@ -1,9 +1,9 @@
+import yarl
 from multidict import CIMultiDict
-from yarl import URL
 
 METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD")
 
-def make_request(method: str, url: URL, headers: CIMultiDict[str, str], body: str) -> bytes:
+def make_request(method: str, url: yarl.URL, headers: CIMultiDict[str, str], body: str) -> bytes:
     request = bytes()
     request += crlf(f"{method} {url.path} HTTP/1.1")
     for k, v in headers.items():
