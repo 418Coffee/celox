@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 else:
     IterableBase = Iterable
 
+__all__ = ("AbstractCookieJar", "JsonEncoder")
 
 class AbstractCookieJar(Sized, IterableBase, metaclass=ABCMeta):
     """Abstract Cookie Jar"""

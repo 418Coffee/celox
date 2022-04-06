@@ -1,6 +1,28 @@
 from typing import Any, final
 from trio import TooSlowError
 
+__all__ = (
+    "ClientError",
+    "ConnectionError",
+    "UnclosedClient",
+    "UnclosedConnector",
+    "UnclosedConnection",
+    "UnclosedResponse",
+    "ConnectionTimeout",
+    "WriteTimeout",
+    "ReadTimeout",
+    "ConnectionOSError",
+    "ProxyConnectionTimeout",
+    "ProxyError",
+    "ProxyConnectionError",
+    "ConnectionSSLError",
+    "ProxyConnectionSSLError",
+    "InvalidURL",
+    "InvalidProxy",
+    "MalformedResponse",
+    "MaxRedirect"
+)
+
 class ClientError(Exception):
     """Base class for all client errors"""
     __slots__: "tuple[str]" = ()
@@ -17,6 +39,15 @@ class UnclosedClient(ClientError, RuntimeError):
 
     def __str__(self) -> str:
         return "Unclosed client"
+
+@final
+class UnclosedConnector(ClientError, RuntimeError):
+    """A client was not closed"""
+
+    __slots__: "tuple[str]" = ()
+
+    def __str__(self) -> str:
+        return "Unclosed connector"
 
 @final
 class UnclosedConnection(ConnectionError, RuntimeError):
