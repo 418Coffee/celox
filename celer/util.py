@@ -20,6 +20,8 @@ from typing import (
 import yarl
 from multidict import CIMultiDict
 
+SCHEMES = ("http", "https")
+
 
 def is_ssl(url: yarl.URL) -> bool:
     if url.port == 443 or url.scheme == "https":

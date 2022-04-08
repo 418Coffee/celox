@@ -5,6 +5,7 @@ import yarl
 
 from .exceptions import InvalidProxy
 from .typedefs import ProxyLike
+from .util import SCHEMES
 
 
 def _connect_request(
@@ -21,8 +22,13 @@ def _connect_request(
 
 def _prepare_proxy(proxy: ProxyLike) -> yarl.URL:
     if isinstance(proxy, yarl.URL):
+        if proxy.scheme not in SCHEMES:
+            raise InvalidProxy(proxy)
         return proxy
     try:
-        return yarl.URL(proxy)
-    except ValueError as e:
+        proxy = yarl.URL(proxy)
+        if proxy.scheme not in SCHEMES:
+            raise InvalidProxy(proxy)
+        return proxy
+    except (ValueError, TypeError) as e:
         raise InvalidProxy(proxy) from e
