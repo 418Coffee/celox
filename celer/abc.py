@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from http.cookies import BaseCookie, Morsel
-from typing import TYPE_CHECKING, Iterable, Optional, Sized
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Sized
 
 import yarl
 
@@ -12,6 +12,7 @@ else:
     IterableBase = Iterable
 
 __all__ = ("AbstractCookieJar", "JsonEncoder")
+
 
 class AbstractCookieJar(Sized, IterableBase, metaclass=ABCMeta):
     """Abstract Cookie Jar"""
@@ -27,12 +28,15 @@ class AbstractCookieJar(Sized, IterableBase, metaclass=ABCMeta):
         """Clear all cookies for domain and all subdomains."""
 
     @abstractmethod
-    def update_cookies(self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()) -> None:
+    def update_cookies(
+        self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()
+    ) -> None:
         """Update cookies."""
 
     @abstractmethod
     def filter_cookies(self, request_url: yarl.URL) -> "BaseCookie[str]":
         """Return the jar's cookies filtered by their attributes."""
+
 
 class JsonEncoder(metaclass=ABCMeta):
     """Abstract JSON Encoder"""
@@ -40,6 +44,6 @@ class JsonEncoder(metaclass=ABCMeta):
     __slots__ = ()
 
     @abstractmethod
-    def dumps(self) -> str:
+    def dumps(self, obj: Any, *args, **kwargs) -> str:
         """Serialize obj to a JSON formatted str."""
         pass

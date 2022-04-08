@@ -4,8 +4,18 @@ import functools
 import re
 import ssl
 import warnings
-from typing import (Any, Callable, Generic, Mapping, Optional, Pattern,
-                    Protocol, Type, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Optional,
+    Pattern,
+    Protocol,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import yarl
 from multidict import CIMultiDict
@@ -16,14 +26,16 @@ def is_ssl(url: yarl.URL) -> bool:
         return True
     return False
 
-def set_value_non_existing(headers: CIMultiDict, key: str, value: str) -> None:
+
+def set_value_non_existing(headers: CIMultiDict[str], key: str, value: str) -> None:
     """Set value to the specified headers if key not in headers."""
     if key in headers:
         return
     headers[key] = value
 
+
 def create_ssl_context(ssl_skip_verify: bool = False) -> ssl.SSLContext:
-    ssl_context =  ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     # SSLv2 is easily broken and is considered harmful and dangerous.
     ssl_context.options |= ssl.OP_NO_SSLv2
     # SSLv3 has several problems and is now dangerous.
@@ -47,7 +59,8 @@ def create_ssl_context(ssl_skip_verify: bool = False) -> ssl.SSLContext:
     ssl_context.load_default_certs(ssl.Purpose.SERVER_AUTH)
     return ssl_context
 
-class frozendict(collections.abc.Mapping):
+
+class frozendict(collections.abc.Mapping):  # type: ignore
     """
     An immutable wrapper around dictionaries that implements the complete :py:class:`collections.Mapping`
     interface. It can be used as a drop-in replacement for dictionaries where immutability is desired.
@@ -75,7 +88,7 @@ class frozendict(collections.abc.Mapping):
         return len(self._dict)
 
     def __repr__(self):
-        return '<%s %r>' % (self.__class__.__name__, self._dict)
+        return "<%s %r>" % (self.__class__.__name__, self._dict)
 
     def __hash__(self):
         if self._hash is None:
@@ -85,6 +98,7 @@ class frozendict(collections.abc.Mapping):
             self._hash = h
         return self._hash
 
+
 class FrozenOrderedDict(frozendict):
     """
     A frozendict subclass that maintains key order
@@ -92,10 +106,13 @@ class FrozenOrderedDict(frozendict):
 
     dict_cls = collections.OrderedDict
 
+
 _T = TypeVar("_T")
 
+
 class _TSelf(Protocol, Generic[_T]):
-    _cache: "dict[str, _T]"
+    _cache: Dict[str, _T]
+
 
 class reify(Generic[_T]):
     """Use as a class method decorator.
@@ -122,11 +139,12 @@ class reify(Generic[_T]):
                 return val
         except AttributeError:
             if inst is None:
-                return self
+                return self  # type: ignore
             raise
 
     def __set__(self, inst: _TSelf[_T], value: _T) -> None:
         raise AttributeError("reified property is read-only")
+
 
 _ipv4_pattern = (
     r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
@@ -147,6 +165,7 @@ _ipv6_regex = re.compile(_ipv6_pattern, flags=re.IGNORECASE)
 _ipv4_regexb = re.compile(_ipv4_pattern.encode("ascii"))
 _ipv6_regexb = re.compile(_ipv6_pattern.encode("ascii"), flags=re.IGNORECASE)
 
+
 def _is_ip_address(
     regex: Pattern[str], regexb: Pattern[bytes], host: Optional[Union[str, bytes]]
 ) -> bool:
@@ -159,22 +178,28 @@ def _is_ip_address(
     else:
         raise TypeError(f"{host} [{type(host)}] is not a str or bytes")
 
+
 is_ipv4_address = functools.partial(_is_ip_address, _ipv4_regex, _ipv4_regexb)
 is_ipv6_address = functools.partial(_is_ip_address, _ipv6_regex, _ipv6_regexb)
+
 
 def is_ip_address(host: Optional[Union[str, bytes, bytearray, memoryview]]) -> bool:
     return is_ipv4_address(host) or is_ipv6_address(host)
 
-__win_errors = frozendict({
-    10050: "Network is down", # WSAENETDOWN
-    10051: "Network is unreachable", # WSAENETUNREACH
-    10052: "Network dropped connection on reset", # WSAENETRESET
-    10053: "Software caused connection abort", # WSAECONNABORTED
-    10054: "An existing connection was forcibly closed by the remote host", # WSAECONNRESET
-    10055: "No buffer space available", # WSAENOBUFS
-    10060: "Connection timed out", # WSAETIMEDOUT
-    10061: "No connection could be made because the target computer actively refused it", # WSAECONNREFUSED
-})
+
+__win_errors = frozendict(
+    {
+        10050: "Network is down",  # WSAENETDOWN
+        10051: "Network is unreachable",  # WSAENETUNREACH
+        10052: "Network dropped connection on reset",  # WSAENETRESET
+        10053: "Software caused connection abort",  # WSAECONNABORTED
+        10054: "An existing connection was forcibly closed by the remote host",  # WSAECONNRESET
+        10055: "No buffer space available",  # WSAENOBUFS
+        10060: "Connection timed out",  # WSAETIMEDOUT
+        10061: "No connection could be made because the target computer actively refused it",  # WSAECONNREFUSED
+    }
+)
+
 
 def winsock2strerror(__code: int) -> str:
     """
@@ -182,5 +207,4 @@ def winsock2strerror(__code: int) -> str:
     Not all errors codes are supported, if ``__code`` is unknown the string literal "Unknown error" is returned.
     More info: https://docs.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
     """
-    # 
     return __win_errors.get(__code, "Unknown error")

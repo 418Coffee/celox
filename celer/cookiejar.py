@@ -1,12 +1,21 @@
-
-
 import contextlib
 import datetime
 import re
 import warnings
 from collections import defaultdict
 from http.cookies import BaseCookie, Morsel, SimpleCookie
-from typing import Iterator, Mapping, Optional, Union, cast
+from typing import (
+    DefaultDict,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import yarl
 
@@ -16,11 +25,13 @@ from .util import is_ip_address
 
 __all__ = ("CookieJar", "DummyCookieJar")
 
+
 def _next_whole_second() -> datetime.datetime:
     """Return current time rounded up to the next whole second."""
     return datetime.datetime.now(datetime.timezone.utc).replace(
         microsecond=0
     ) + datetime.timedelta(seconds=0)
+
 
 class CookieJar(AbstractCookieJar):
     """Implements cookie storage adhering to RFC 6265."""
@@ -43,17 +54,19 @@ class CookieJar(AbstractCookieJar):
 
     MAX_TIME = datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
 
-    MAX_32BIT_TIME = datetime.datetime.utcfromtimestamp(2 ** 31 - 1)
+    MAX_32BIT_TIME = datetime.datetime.utcfromtimestamp(2**31 - 1)
 
     def __init__(
         self,
         *,
         unsafe: bool = False,
         quote_cookie: bool = True,
-        treat_as_secure_origin: Union[StrOrURL, "list[StrOrURL]", None] = None
+        treat_as_secure_origin: Union[StrOrURL, List[StrOrURL], None] = None
     ) -> None:
-        self._cookies: defaultdict[tuple[str, str], SimpleCookie[str]] = defaultdict(SimpleCookie)
-        self._host_only_cookies: set[tuple[str, str]] = set()
+        self._cookies: DefaultDict[Tuple[str, str], SimpleCookie[str]] = defaultdict(
+            SimpleCookie
+        )
+        self._host_only_cookies: Set[Tuple[str, str]] = set()
         self._unsafe = unsafe
         self._quote_cookie = quote_cookie
         if treat_as_secure_origin is None:
@@ -69,14 +82,14 @@ class CookieJar(AbstractCookieJar):
             ]
         self._treat_as_secure_origin = treat_as_secure_origin
         self._next_expiration = _next_whole_second()
-        self._expirations: dict[tuple[str, str, str], datetime.datetime] = {}
+        self._expirations: Dict[Tuple[str, str, str], datetime.datetime] = {}
         # #4515: datetime.max may not be representable on 32-bit platforms
         self._max_time = self.MAX_TIME
         try:
             self._max_time.timestamp()
         except OverflowError:
             self._max_time = self.MAX_32BIT_TIME
-    
+
     def clear(self, predicate: Optional[ClearCookiePredicate] = None) -> None:
         if predicate is None:
             self._next_expiration = _next_whole_second()
@@ -113,7 +126,9 @@ class CookieJar(AbstractCookieJar):
     def clear_domain(self, domain: str) -> None:
         self.clear(lambda x: self._is_domain_match(domain, x["domain"]))
 
-    def update_cookies(self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()) -> None:
+    def update_cookies(
+        self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()
+    ) -> None:
         """Update cookies."""
         hostname = response_url.raw_host
 
@@ -189,14 +204,14 @@ class CookieJar(AbstractCookieJar):
             self._cookies[(domain, path)][name] = cookie
 
         self._do_expiration()
-    
+
     def filter_cookies(
         self, request_url: yarl.URL = yarl.URL()
     ) -> Union["BaseCookie[str]", "SimpleCookie[str]"]:
         """Returns this jar's cookies filtered by their attributes."""
         self._do_expiration()
         if not isinstance(request_url, yarl.URL):
-            warnings.warn(
+            warnings.warn(  # type: ignore
                 "The method accepts yarl.URL instances only, got {}".format(
                     type(request_url)
                 ),
@@ -211,7 +226,10 @@ class CookieJar(AbstractCookieJar):
         with contextlib.suppress(ValueError):
             request_origin = request_url.origin()
 
-        is_not_secure = request_url.scheme != "https" and request_origin not in self._treat_as_secure_origin
+        is_not_secure = (
+            request_url.scheme != "https"
+            and request_origin not in self._treat_as_secure_origin
+        )
 
         for cookie in self:
             name = cookie.key
@@ -363,6 +381,7 @@ class CookieJar(AbstractCookieJar):
     def __len__(self) -> int:
         return sum(1 for i in self)
 
+
 class DummyCookieJar(AbstractCookieJar):
     """Implements a dummy cookie storage.
 
@@ -372,7 +391,7 @@ class DummyCookieJar(AbstractCookieJar):
 
     def __iter__(self) -> "Iterator[Morsel[str]]":
         while False:
-            yield None
+            yield None  # type: ignore
 
     def __len__(self) -> int:
         return 0
@@ -383,7 +402,9 @@ class DummyCookieJar(AbstractCookieJar):
     def clear_domain(self, domain: str) -> None:
         pass
 
-    def update_cookies(self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()) -> None:
+    def update_cookies(
+        self, cookies: CookieLike, response_url: yarl.URL = yarl.URL()
+    ) -> None:
         pass
 
     def filter_cookies(self, request_url: yarl.URL) -> "BaseCookie[str]":

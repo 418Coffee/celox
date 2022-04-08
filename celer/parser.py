@@ -1,10 +1,21 @@
-from typing import Union
+from typing import Optional, Tuple, Union
+
 
 class ReceiveBuffer:
 
-    __slots__: "tuple[str]" = ("_buf", "terminator", "idx", "max_frame_length")
+    __slots__: Tuple[str, str, str, str] = (
+        "_buf",
+        "terminator",
+        "idx",
+        "max_frame_length",
+    )
 
-    def __init__(self, byteslike: Union[bytes, bytearray] = None, terminator: bytes=b"\r\n\r\n", max_frame_length=65535) -> None:
+    def __init__(
+        self,
+        byteslike: Optional[Union[bytes, bytearray]] = None,
+        terminator: bytes = b"\r\n\r\n",
+        max_frame_length=65535,
+    ) -> None:
         self._buf = bytearray()
         if byteslike:
             self._buf += byteslike
@@ -30,18 +41,18 @@ class ReceiveBuffer:
         # Yes, extract the data by stripping the terminator.
         data = self._buf[:terminator_idx]
         # Delete what we have already searched through, there might still be bytes left after the terminator.
-        del self._buf[:terminator_idx+len(self.terminator)]
+        del self._buf[: terminator_idx + len(self.terminator)]
         # Set the search index to the beginning again.
         self.idx = 0
         return data
 
     def close(self):
         del self._buf[:]
-    
-    def __iadd__(self,  byteslike: Union[bytes, bytearray]) -> "ReceiveBuffer":
+
+    def __iadd__(self, byteslike: Union[bytes, bytearray]) -> "ReceiveBuffer":
         self._buf += byteslike
         return self
-    
+
     def __bool__(self) -> bool:
         return bool(len(self))
 
@@ -49,14 +60,4 @@ class ReceiveBuffer:
         return len(self._buf)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} idx={self.idx} terminator={self.terminator} max_frame_length={self.max_frame_length}>"
-
-
-
-
-
-        
-
-        
-
-            
+        return f"<{self.__class__.__name__} idx={self.idx} terminator={self.terminator!r} max_frame_length={self.max_frame_length}>"

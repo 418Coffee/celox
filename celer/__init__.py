@@ -1,22 +1,12 @@
 __version__ = "0.0.1a"
 
-from .abc import (
-    AbstractCookieJar as AbstractCookieJar,
-    JsonEncoder as JsonEncoder
-)
+from .abc import AbstractCookieJar as AbstractCookieJar, JsonEncoder as JsonEncoder
 
-from .client import (
-    Client as Client
-)
+from .client import Client as Client
 
-from .connection import (
-    Connector as Connector
-)
+from .connection import Connector as Connector
 
-from .cookiejar import (
-    CookieJar as CookieJar,
-    DummyCookieJar as DummyCookieJar
-)
+from .cookiejar import CookieJar as CookieJar, DummyCookieJar as DummyCookieJar
 
 from .exceptions import (
     ClientError as ClientError,
@@ -37,40 +27,29 @@ from .exceptions import (
     InvalidURL as InvalidURL,
     InvalidProxy as InvalidProxy,
     MalformedResponse as MalformedResponse,
-    MaxRedirect as MaxRedirect
+    MaxRedirect as MaxRedirect,
 )
 
-from .response import (
-    Response as Response
-)
+from .response import Response as Response
 
-from .timeout import (
-    Timeout as Timeout
-)
+from .timeout import Timeout as Timeout
 
 from .typedefs import (
     StrOrURL as StrOrURL,
     TimeoutLike as TimeoutLike,
     ProxyLike as ProxyLike,
-    CookieLike as CookieLike
+    CookieLike as CookieLike,
 )
 
-from .util import (
-    frozendict as frozendict,
-    FrozenOrderedDict as FrozenOrderedDict
-)
+from .util import frozendict as frozendict, FrozenOrderedDict as FrozenOrderedDict
 
-__all__: "tuple[str]" = (
+__all__ = (
     "AbstractCookieJar",
     "JsonEncoder",
-
     "Client",
-
     "Connector",
-
     "CookieJar",
     "DummyCookieJar",
-
     "ClientError",
     "ConnectionError",
     "UnclosedClient",
@@ -90,16 +69,12 @@ __all__: "tuple[str]" = (
     "InvalidProxy",
     "MalformedResponse",
     "MaxRedirect",
-
     "Response",
-
     "Timeout",
-
     "StrOrURL",
     "TimeoutLike",
     "ProxyLike",
     "CookieLike",
-
     "frozendict",
-    "FrozenOrderedDict"
+    "FrozenOrderedDict",
 )
