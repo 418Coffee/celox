@@ -7,30 +7,40 @@ from celer.timeout import Timeout
 from celer.request import make_request
 from .conftest import http_handler, http_handler_chunked, http_handler_chunked_trailers
 
+
 @pytest.fixture
-async def connector():
-    return Connector(limit=0)
+def limitless_connector():
+    c = Connector(limit=0)
+    try:
+        yield c
+    finally:
+        c.close()
 
 
-async def test_handler_closed_connection(connector: Connector):
+async def test_handler_closed_connection(limitless_connector: Connector):
     timeout = Timeout(5, 5, 5, 5)
     conn = DirectConnection("httpbin.org", 80, create_ssl_context(), timeout)
     conn._closed = True
     with pytest.raises(AssertionError):
-        handler = HTTPConnection(connector, conn)
+        handler = HTTPConnection(limitless_connector, conn)
+
 
 @pytest.mark.parametrize("direct_connection", [http_handler], indirect=True)
-async def test_handler(direct_connection: DirectConnection, connector: Connector):
+async def test_handler(
+    direct_connection: DirectConnection, limitless_connector: Connector
+):
     await direct_connection.connect_tcp()
-    handler = HTTPConnection(connector, direct_connection)
+    handler = HTTPConnection(limitless_connector, direct_connection)
     url = yarl.URL(f"http://localhost{direct_connection.port}/")
-    request = make_request("GET", url, {"Host": f"http://localhost{direct_connection.port}/"}, None)
+    request = make_request(
+        "GET", url, {"Host": f"http://localhost{direct_connection.port}/"}, None
+    )
     resp = await handler.write_request_read_response(request)
     c = Cache()
     c.connections.append(handler)
     c.aqcuired.add(handler)
-    connector._cache[direct_connection.key] = c
-    connector._acquired.add(handler)
+    limitless_connector._cache[direct_connection.key] = c
+    limitless_connector._acquired.add(handler)
     await resp.read()
     assert resp.ok
     assert resp.content_length == 602
@@ -38,35 +48,46 @@ async def test_handler(direct_connection: DirectConnection, connector: Connector
 
 
 @pytest.mark.parametrize("direct_connection", [http_handler_chunked], indirect=True)
-async def test_handler_chunked(direct_connection: DirectConnection, connector: Connector):
+async def test_handler_chunked(
+    direct_connection: DirectConnection, limitless_connector: Connector
+):
     await direct_connection.connect_tcp()
-    handler = HTTPConnection(connector, direct_connection)
+    handler = HTTPConnection(limitless_connector, direct_connection)
     url = yarl.URL(f"http://localhost:{direct_connection.port}/")
-    request = make_request("GET", url, {"Host": f"http://localhost:{direct_connection.port}/"}, None)
+    request = make_request(
+        "GET", url, {"Host": f"http://localhost:{direct_connection.port}/"}, None
+    )
     resp = await handler.write_request_read_response(request)
     c = Cache()
     c.connections.append(handler)
     c.aqcuired.add(handler)
-    connector._cache[direct_connection.key] = c
-    connector._acquired.add(handler)
+    limitless_connector._cache[direct_connection.key] = c
+    limitless_connector._acquired.add(handler)
     await resp.read()
     assert resp.ok
     assert resp.chunked
     assert resp.content_length > 0
     assert len(resp.body) == resp.content_length
 
-@pytest.mark.parametrize("direct_connection", [http_handler_chunked_trailers], indirect=True)
-async def test_handler_chunked_trailers(direct_connection: DirectConnection, connector: Connector):
+
+@pytest.mark.parametrize(
+    "direct_connection", [http_handler_chunked_trailers], indirect=True
+)
+async def test_handler_chunked_trailers(
+    direct_connection: DirectConnection, limitless_connector: Connector
+):
     await direct_connection.connect_tcp()
-    handler = HTTPConnection(connector, direct_connection)
+    handler = HTTPConnection(limitless_connector, direct_connection)
     url = yarl.URL(f"http://localhost:{direct_connection.port}/")
-    request = make_request("GET", url, {"Host": f"http://localhost:{direct_connection.port}/"}, None)
+    request = make_request(
+        "GET", url, {"Host": f"http://localhost:{direct_connection.port}/"}, None
+    )
     resp = await handler.write_request_read_response(request)
     c = Cache()
     c.connections.append(handler)
     c.aqcuired.add(handler)
-    connector._cache[direct_connection.key] = c
-    connector._acquired.add(handler)
+    limitless_connector._cache[direct_connection.key] = c
+    limitless_connector._acquired.add(handler)
     await resp.read()
     assert resp.ok
     assert resp.chunked
@@ -74,5 +95,3 @@ async def test_handler_chunked_trailers(direct_connection: DirectConnection, con
     assert len(resp.body) == resp.content_length
     assert resp.trailers == "Expires,Set-Cookie"
     assert resp.cookies.get("test").value == "passed"
-
-
