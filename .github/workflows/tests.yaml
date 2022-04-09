@@ -24,6 +24,11 @@ jobs:
           pip install tox tox-gh-actions
       - name: Test with tox
         run: tox
+      - name: Upload coverage data to coveralls.io
+        run: coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_PARALLEL: true
   coveralls:
     name: Indicate completion to coveralls.io
     needs: test
