@@ -29,6 +29,14 @@ DictLike = Union[
     MultiDict[str],
     MultiDictProxy[str],
 ]
+DictInstances = (
+    OrderedDict,
+    Dict,
+    CIMultiDict,
+    CIMultiDictProxy,
+    MultiDict,
+    MultiDictProxy,
+)
 ProxyLike = StrOrURL
 SSLLike = Union[SSLContext, bool]
 StreamLike = Union[SSLStream, SocketStream]

@@ -4,18 +4,7 @@ import warnings
 from types import TracebackType
 
 # For 3.7 support we could import get_args from typing_extensions
-from typing import (
-    Any,
-    Coroutine,
-    Generator,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    get_args,
-)
+from typing import Any, Coroutine, Generator, List, Mapping, Optional, Set, Tuple, Type
 from urllib.parse import urlencode
 
 import yarl
@@ -31,8 +20,16 @@ from .proxy import _prepare_proxy
 from .request import METHODS, make_request
 from .response import Response
 from .timeout import Timeout
-from .typedefs import CookieLike, DictLike, ProxyLike, SSLLike, StrOrURL, TimeoutLike
-from .util import create_ssl_context, set_value_non_existing, SCHEMES
+from .typedefs import (
+    CookieLike,
+    DictInstances,
+    DictLike,
+    ProxyLike,
+    SSLLike,
+    StrOrURL,
+    TimeoutLike,
+)
+from .util import SCHEMES, create_ssl_context, set_value_non_existing
 
 __all__ = ("Client",)
 
@@ -170,7 +167,7 @@ class Client:
             data = self._json_encoder.dumps(json)
             set_value_non_existing(hdrs, "Content-Type", "application/json")
 
-        if isinstance(data, get_args(DictLike)):
+        if isinstance(data, DictInstances):
             data = self._prepare_form(data)
             set_value_non_existing(
                 hdrs, "Content-Type", "application/x-www-form-urlencoded"
@@ -224,7 +221,7 @@ class Client:
             # Create the request.
             req = make_request(method, url, hdrs, data)
             # Send the request and read the response.
-            resp = await conn.write_request_read_response(req)
+            resp = await conn.write_request_read_response(req, self._cookie_jar)
             # Set the request url to the resp object, for debugging purposes we are redirected.
             resp._url = url
             # Are we redirected?
