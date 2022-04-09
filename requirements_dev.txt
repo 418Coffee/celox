@@ -3,7 +3,7 @@ mypy==0.942
 flake8==4.0.1
 pytest-cov==3.0.0
 tox==3.24.5
-numpy==1.20.3
+numpy==1.21.0
 yarl==1.6.3
 trio==0.20.0
 pytest-trio==0.7.0
