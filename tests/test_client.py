@@ -54,7 +54,7 @@ async def test_client_invalid_baseurl():
 
 
 async def test_client_timeout():
-    async with Client(base_url="http://httpbin.org/", timeout=0.1) as client:
+    async with Client(base_url="http://httpbin.org/", timeout=0.01) as client:
         with pytest.raises(RequestTimeout):
             await client.get("/get")
 
