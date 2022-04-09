@@ -83,7 +83,7 @@ class BaseConnection:
     )
 
     def __init__(
-        self, host: Any, port: Any, ssl_context: ssl.SSLContext, timeout: TimeoutLike
+        self, host: Any, port: Any, ssl_context: ssl.SSLContext, timeout: Timeout
     ) -> None:
         assert ssl_context is not None
         self.host = host
@@ -94,8 +94,6 @@ class BaseConnection:
         )
         self._stream: Union[SSLStream, SocketStream] = None
         self._ssl: Union[bool, None] = None
-        if isinstance(timeout, (float, int)):
-            timeout = Timeout(total=float(timeout))
         self._timeout = timeout
         self._closed: Union[bool, None] = None
 
@@ -279,11 +277,11 @@ class ProxyConnection(BaseConnection):
         ssl_context: ssl.SSLContext,
         timeout: TimeoutLike,
     ) -> None:
+        super().__init__(host, port, ssl_context, timeout)
         self.proxy: yarl.URL = _prepare_proxy(proxy_url)
         self._proxy_connection: DirectConnection = DirectConnection(
             self.proxy.host, self.proxy.port, ssl_context, timeout
         )
-        super().__init__(host, port, ssl_context, timeout)
 
     async def connect_tcp(self):
         # Are we already connected?
@@ -713,7 +711,7 @@ class Connector:
         host: Any,
         port: Any,
         ssl_context: ssl.SSLContext,
-        timeout: TimeoutLike,
+        timeout: Timeout,
         proxy_url: Union[ProxyLike, None],
     ) -> Union[DirectConnection, ProxyConnection]:
         if proxy_url is not None:
@@ -725,7 +723,7 @@ class Connector:
         host: Any,
         port: Any,
         ssl_context: ssl.SSLContext,
-        timeout: TimeoutLike,
+        timeout: Timeout,
         proxy_url: Union[ProxyLike, None],
     ):
         key = ConnectionKey(host, port, ssl_context.verify_mode == ssl.CERT_NONE)

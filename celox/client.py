@@ -7,6 +7,7 @@ from types import TracebackType
 from typing import Any, Coroutine, Generator, List, Mapping, Optional, Set, Tuple, Type
 from urllib.parse import urlencode
 
+import trio
 import yarl
 from multidict import CIMultiDict, MultiDict
 from typing_extensions import final
@@ -15,7 +16,13 @@ from .abc import AbstractCookieJar, JsonEncoder
 from .connection import Connector, HTTPConnection
 from .cookiejar import CookieJar
 from .defaults import DEFAULT_HEADERS, DEFAULT_TIMEOUT
-from .exceptions import InvalidURL, MalformedResponse, MaxRedirect, UnclosedClient
+from .exceptions import (
+    InvalidURL,
+    MalformedResponse,
+    MaxRedirect,
+    RequestTimeout,
+    UnclosedClient,
+)
 from .proxy import _prepare_proxy
 from .request import METHODS, make_request
 from .response import Response
@@ -200,94 +207,100 @@ class Client:
         if ssl_skip_verify:
             ssl_context = create_ssl_context(ssl_skip_verify=True)
 
-        redirects = 0
+        redirects = 1
         history: List[Response] = list()
         must_acquire_new_connection = True
         conn: HTTPConnection
         resp: Response
-        while True:
-            # We have to put _connector.acquire in a while True loop because we must acquire a new connection if we get redirect to a different domain.
-            # Block until we're a connection is ready or we're under the conncurrent connection limit.
-            if must_acquire_new_connection:
-                conn = await self._connector.acquire(
-                    url.raw_host, url.port, ssl_context, timeout, proxy
-                )
-                # Connect to the peer, this is a noop if we're already connected.
-                if is_ssl:
-                    await conn._conn.connect_ssl()
-                else:
-                    await conn._conn.connect_tcp()
-            assert conn is not None
-            # Create the request.
-            req = make_request(method, url, hdrs, data)
-            # Send the request and read the response.
-            resp = await conn.write_request_read_response(req, self._cookie_jar)
-            # Set the request url to the resp object, for debugging purposes we are redirected.
-            resp._url = url
-            # Are we redirected?
-            location = resp.headers.get("Location")
-            if location is not None:
-                # Yes we're redirected, but should we actually follow the redirect?
-                if not allow_redirects:
-                    # No, just return the response.
+        try:
+            with trio.fail_after(self._timeout.total or self._timeout.any):
+                while True:
+                    # We have to put _connector.acquire in a while True loop because we must acquire a new connection if we get redirect to a different domain.
+                    # Block until we're a connection is ready or we're under the conncurrent connection limit.
+                    if must_acquire_new_connection:
+                        conn = await self._connector.acquire(
+                            url.raw_host, url.port, ssl_context, timeout, proxy
+                        )
+                        # Connect to the peer, this is a noop if we're already connected.
+                        if is_ssl:
+                            await conn._conn.connect_ssl()
+                        else:
+                            await conn._conn.connect_tcp()
+                    assert conn is not None
+                    # Create the request.
+                    req = make_request(method, url, hdrs, data)
+                    # Send the request and read the response.
+                    resp = await conn.write_request_read_response(req, self._cookie_jar)
+                    # Set the request url to the resp object, for debugging purposes we are redirected.
+                    resp._url = url
+                    # Are we redirected?
+                    location = resp.headers.get("Location")
+                    if location is not None:
+                        # Yes we're redirected, but should we actually follow the redirect?
+                        if not allow_redirects:
+                            # No, just return the response.
+                            break
+                        # Yes, are we over the limit of redirects?
+                        if redirects > max_redirects:
+                            # We are, close the response because we won't use it again and raise an exception.
+                            await resp.close()
+                            raise MaxRedirect(url.human_repr(), max_redirects)
+                        # We aren't, prepare url for sending again.
+                        old_host = url.raw_host
+                        try:
+                            url = self._prepare_url(location)
+                        except (ValueError, TypeError) as e:
+                            raise MalformedResponse(
+                                f"Invalid url for redirect: {url}"
+                            ) from e
+                        # Are we redirect to a different domain?
+                        if old_host != url.raw_host:
+                            # Yes, we can close the old response now.
+                            await resp.close()
+                            # The next time we iterate we will acquire a connection to the new host.
+                            must_acquire_new_connection = True
+                        else:
+                            # No, this is perhaps the trickiest situation.
+                            # We cannot call resp.close, because that would release the connection back to _connector,
+                            # but we still want to be sure that the connection is reusable.
+                            # But, we cheated a little bit in write_request_read_response,
+                            # if we already read all the response body then resp.body will be non-nil, meaning that this connection can be reused.
+                            if resp.body is not None:
+                                # We set resp._closed to True otherwise __del__ will scream at use for not closing the response.
+                                resp._closed = True
+                                must_acquire_new_connection = False
+                            else:
+                                # Well, we're out of luck, there are still bytes left to be read.
+                                # Best we can do now is close the response and block to acquire a new connection to perform the redirect.
+                                await resp.close()
+                                must_acquire_new_connection = True
+                        # Check via status code what to do with our method/body.
+                        if resp.status in (301, 302, 303):
+                            # https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections says we can choose if we change our method to GET.
+                            # Let's do that.
+                            method = "GET"
+                            data = None
+                            hdrs.pop("Content-Type", None)
+                            hdrs.pop("Content-Length", None)
+                        else:
+                            # Now we're getting 307 or 308 most likely.
+                            # We keep everything the same.
+                            # This code block is unnecessary really.
+                            pass
+                        hdrs["Host"] = (
+                            url.raw_host  # type: ignore
+                            if url.is_default_port()
+                            else f"{url.raw_host}:{url.port}"
+                        )
+                        # Keep track of the amount redirects and the responses.
+                        redirects += 1
+                        history.append(resp)
+                        continue
                     break
-                # Yes, are we over the limit of redirects?
-                if redirects > max_redirects:
-                    # We are, close the response because we won't use it again and raise an exception.
-                    await resp.close()
-                    raise MaxRedirect(url.human_repr(), max_redirects)
-                # We aren't, prepare url for sending again.
-                old_host = url.raw_host
-                try:
-                    url = self._prepare_url(location)
-                except (ValueError, TypeError) as e:
-                    raise MalformedResponse(f"Invalid url for redirect: {url}") from e
-                # Are we redirect to a different domain?
-                if old_host != url.raw_host:
-                    # Yes, we can close the old response now.
-                    await resp.close()
-                    # The next time we iterate we will acquire a connection to the new host.
-                    must_acquire_new_connection = True
-                else:
-                    # No, this is perhaps the trickiest situation.
-                    # We cannot call resp.close, because that would release the connection back to _connector,
-                    # but we still want to be sure that the connection is reusable.
-                    # But, we cheated a little bit in write_request_read_response,
-                    # if we already read all the response body then resp.body will be non-nil, meaning that this connection can be reused.
-                    if resp.body is not None:
-                        # We set resp._closed to True otherwise __del__ will scream at use for not closing the response.
-                        resp._closed = True
-                        must_acquire_new_connection = False
-                    else:
-                        # Well, we're out of luck, there are still bytes left to be read.
-                        # Best we can do now is close the response and block to acquire a new connection to perform the redirect.
-                        await resp.close()
-                        must_acquire_new_connection = True
-                # Check via status code what to do with our method/body.
-                if resp.status in (301, 302, 303):
-                    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections says we can choose if we change our method to GET.
-                    # Let's do that.
-                    method = "GET"
-                    data = None
-                    hdrs.pop("Content-Type", None)
-                    hdrs.pop("Content-Length", None)
-                else:
-                    # Now we're getting 307 or 308 most likely.
-                    # We keep everything the same.
-                    # This code block is unnecessary really.
-                    pass
-                hdrs["Host"] = (
-                    url.raw_host  # type: ignore
-                    if url.is_default_port()
-                    else f"{url.raw_host}:{url.port}"
-                )
-                # Keep track of the amount redirects and the responses.
-                redirects += 1
-                history.append(resp)
-                continue
-            break
-        resp._history += history
-        return resp
+                resp._history += history
+                return resp
+        except trio.TooSlowError as e:
+            raise RequestTimeout() from e
 
     def request(
         self,
@@ -522,7 +535,7 @@ class Client:
 
     def _prepare_url(self, url: StrOrURL) -> yarl.URL:
         url = yarl.URL(url)
-        if url.scheme not in SCHEMES:
+        if url.is_absolute() and url.scheme not in SCHEMES:
             raise ValueError(f"Unsupported protocol {self._base_url.scheme}")  # type: ignore
         if self._base_url is None:
             return url
@@ -561,7 +574,9 @@ class Client:
         return f"<{self.__class__.__name__} closed={self.closed} connector={self._connector} ssl_context={self._ssl_context}>"
 
     def __del__(self, _warnings: Any = warnings) -> None:
-        if not self._closed:
+        # We might error in __init__, since we set _closed last it might not be defined yet.
+        # If it's not defined we know we're not open.
+        if not getattr(self, "_closed", True):
             _warnings.warn(
                 f"Unclosed client session {self!r}",
                 ResourceWarning,

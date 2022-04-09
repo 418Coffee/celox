@@ -77,6 +77,16 @@ class UnclosedResponse(ClientError, RuntimeError):
         return "Unclosed response"
 
 
+@final
+class RequestTimeout(ClientError):
+    """The request exceed the given deadline"""
+
+    __slots__ = ()
+
+    def __str__(self) -> str:
+        return "The request exceed the given deadline"
+
+
 class ConnectionTimeout(ConnectionError, TooSlowError):
     """The connect attempt exceeded the given timeout"""
 
