@@ -1,7 +1,7 @@
 import ssl
 
 import yarl
-from celox import Client, InvalidURL, RequestTimeout
+from celox import Client, InvalidURL, RequestTimeout, Timeout
 import pytest
 
 from celox.exceptions import InvalidProxy, MaxRedirect
@@ -54,7 +54,9 @@ async def test_client_invalid_baseurl():
 
 
 async def test_client_timeout():
-    async with Client(base_url="http://httpbin.org/", timeout=0.01) as client:
+    async with Client(
+        base_url="http://httpbin.org/", timeout=Timeout(total=0, any=0)
+    ) as client:
         with pytest.raises(RequestTimeout):
             await client.get("/get")
 
