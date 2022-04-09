@@ -1,7 +1,7 @@
 # celox
 
 ![Tests](https://github.com/418Coffee/celox/actions/workflows/tests.yaml/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/418Coffee/celox/badge.svg?branch=main)](https://coveralls.io/github/418Coffee/celox?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/418Coffee/celox/badge.svg)](https://coveralls.io/github/418Coffee/celox?branch=main)
 
 Minimalistic, fast HTTP/1.1 client using [trio](https://github.com/python-trio/trio) as a backend.
 
