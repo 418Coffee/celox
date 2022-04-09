@@ -1,5 +1,8 @@
 # celox
 
+![Tests](https://github.com/418Coffee/celox/actions/workflows/tests.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/418Coffee/celox/badge.svg?branch=main)](https://coveralls.io/github/418Coffee/celox?branch=main)
+
 Minimalistic, fast HTTP/1.1 client using [trio](https://github.com/python-trio/trio) as a backend.
 
 Syntax is similair to [aiohttp](https://github.com/aio-libs/aiohttp) and [requests](https://github.com/psf/requests).
