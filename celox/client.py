@@ -450,6 +450,38 @@ class Client:
             )
         )
 
+    def patch(
+        self,
+        url: StrOrURL,
+        *,
+        params: Optional[Mapping[str, str]] = None,
+        data: Any = None,
+        json: Any = None,
+        headers: Optional[DictLike] = None,
+        proxy: Optional[ProxyLike] = None,
+        cookies: Optional[CookieLike] = None,
+        allow_redirects: bool = True,
+        max_redirects: int = 10,
+        timeout: Optional[Timeout] = None,
+        ssl_skip_verify: bool = False,
+    ) -> "_RequestContextManager":
+        return _RequestContextManager(
+            self._request(
+                method="PATCH",
+                url=url,
+                params=params,
+                data=data,
+                json=json,
+                headers=headers,
+                proxy=proxy,
+                cookies=cookies,
+                allow_redirects=allow_redirects,
+                max_redirects=max_redirects,
+                timeout=timeout,
+                ssl_skip_verify=ssl_skip_verify,
+            )
+        )
+
     def delete(
         self,
         url: StrOrURL,

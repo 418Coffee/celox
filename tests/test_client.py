@@ -23,6 +23,11 @@ async def test_put(client: Client):
         assert resp.status == 200
 
 
+async def test_patch(client: Client):
+    async with client.patch("http://httpbin.org/patch", data="test") as resp:
+        assert resp.status == 200
+
+
 async def test_delete(client: Client):
     async with client.delete("http://httpbin.org/delete", data="test") as resp:
         assert resp.status == 200
