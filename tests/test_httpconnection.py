@@ -9,12 +9,12 @@ from .conftest import http_handler, http_handler_chunked, http_handler_chunked_t
 
 
 @pytest.fixture
-def limitless_connector():
+async def limitless_connector():
     c = Connector(limit=0)
     try:
         yield c
     finally:
-        c.close()
+        await c.close()
 
 
 async def test_handler_closed_connection(limitless_connector: Connector):
@@ -23,6 +23,7 @@ async def test_handler_closed_connection(limitless_connector: Connector):
     conn._closed = True
     with pytest.raises(AssertionError):
         handler = HTTPConnection(limitless_connector, conn)
+    await conn.close()
 
 
 @pytest.mark.parametrize("direct_connection", [http_handler], indirect=True)
