@@ -1,3 +1,5 @@
+__version__ = "0.0.2"
+
 from .abc import AbstractCookieJar as AbstractCookieJar, JsonEncoder as JsonEncoder
 
 from .client import Client as Client
@@ -41,8 +43,6 @@ from .typedefs import (
 )
 
 from .util import frozendict as frozendict, FrozenOrderedDict as FrozenOrderedDict
-
-__version__ = "0.0.2"
 
 __all__ = (
     "AbstractCookieJar",
