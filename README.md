@@ -16,9 +16,9 @@ Syntax is similair to [aiohttp](https://github.com/aio-libs/aiohttp) and [reques
 
 ## Table of contents
 
-- [Quickstart](#Quickstart)
-- [API Overview](#API Overview)
-- [Dependencies](#Dependencies)
+- [Quickstart](#quickstart)
+- [API Overview](#api-overview)
+- [Dependencies](#dependencies)
 - [Contributing](#contributing)
 - [License](#license)
 
