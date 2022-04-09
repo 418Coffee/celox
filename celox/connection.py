@@ -36,7 +36,7 @@ from .parser import ReceiveBuffer
 from .proxy import _connect_request, _prepare_proxy
 from .response import Response
 from .timeout import Timeout
-from .typedefs import ProxyLike, TimeoutLike
+from .typedefs import ProxyLike
 from .util import is_ssl, winsock2strerror
 
 __all__ = (
