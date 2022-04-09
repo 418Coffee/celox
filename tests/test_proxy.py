@@ -1,6 +1,6 @@
 import pytest
-from celer import InvalidProxy
-from celer.proxy import _prepare_proxy, _connect_request
+from celox import InvalidProxy
+from celox.proxy import _prepare_proxy, _connect_request
 
 
 def test_connect_request():

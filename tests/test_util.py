@@ -2,7 +2,7 @@ import ssl
 import pytest
 import yarl
 
-from celer.util import (
+from celox.util import (
     FrozenOrderedDict,
     create_ssl_context,
     frozendict,

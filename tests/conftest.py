@@ -2,9 +2,9 @@ from functools import partial
 
 import pytest
 import trio
-from celer.connection import DirectConnection
-from celer.timeout import Timeout
-from celer.util import create_ssl_context
+from celox.connection import DirectConnection
+from celox.timeout import Timeout
+from celox.util import create_ssl_context
 from trio import socket as tsocket
 
 import numpy as np

@@ -1,9 +1,9 @@
 import trio
-import celer
+import celox
 
 
 async def main():
-    async with celer.Client() as client:
+    async with celox.Client() as client:
         async with client.get("https://httpbin.org/") as resp:
             body = await resp.read()
             print(body)

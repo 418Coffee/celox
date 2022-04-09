@@ -1,4 +1,4 @@
-from celer import Client
+from celox import Client
 import pytest
 
 # Sadly we must a "function" scope because of pytest-trio.

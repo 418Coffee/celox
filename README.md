@@ -1,2 +1,3 @@
-# celer
- Fast trio HTTP client
+# celox
+
+Fast trio HTTP client

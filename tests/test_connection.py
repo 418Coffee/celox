@@ -2,11 +2,11 @@ from itertools import count
 
 import pytest
 import trio
-from celer.connection import Connector
-from celer.defaults import DEFAULT_HEADERS
-from celer.request import make_request
-from celer.timeout import Timeout
-from celer.util import create_ssl_context
+from celox.connection import Connector
+from celox.defaults import DEFAULT_HEADERS
+from celox.request import make_request
+from celox.timeout import Timeout
+from celox.util import create_ssl_context
 
 
 async def try_connect(tid: int, connector: Connector):

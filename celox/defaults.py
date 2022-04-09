@@ -4,7 +4,7 @@ from . import __version__
 from .timeout import Timeout
 from .util import FrozenOrderedDict
 
-USER_AGENT: Final[str] = f"celer/{__version__}"
+USER_AGENT: Final[str] = f"celox/{__version__}"
 
 DEFAULT_HEADERS: FrozenOrderedDict = FrozenOrderedDict(
     {

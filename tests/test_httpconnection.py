@@ -1,10 +1,10 @@
 import pytest
 import yarl
-from celer.connection import Cache, Connector, DirectConnection
-from celer.connection import HTTPConnection
-from celer.util import create_ssl_context
-from celer.timeout import Timeout
-from celer.request import make_request
+from celox.connection import Cache, Connector, DirectConnection
+from celox.connection import HTTPConnection
+from celox.util import create_ssl_context
+from celox.timeout import Timeout
+from celox.request import make_request
 from .conftest import http_handler, http_handler_chunked, http_handler_chunked_trailers
 
 

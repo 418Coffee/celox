@@ -1,5 +1,5 @@
 import pytest
-from celer.parser import ReceiveBuffer
+from celox.parser import ReceiveBuffer
 
 
 @pytest.fixture(scope="module")
