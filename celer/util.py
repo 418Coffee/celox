@@ -24,7 +24,7 @@ SCHEMES = ("http", "https")
 
 
 def is_ssl(url: yarl.URL) -> bool:
-    if url.port == 443 or url.scheme == "https":
+    if url.scheme == "https" or url.port == 443:
         return True
     return False
 
