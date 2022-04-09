@@ -275,7 +275,7 @@ class ProxyConnection(BaseConnection):
         port: Any,
         proxy_url: ProxyLike,
         ssl_context: ssl.SSLContext,
-        timeout: TimeoutLike,
+        timeout: Timeout,
     ) -> None:
         super().__init__(host, port, ssl_context, timeout)
         self.proxy: yarl.URL = _prepare_proxy(proxy_url)
