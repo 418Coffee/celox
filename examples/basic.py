@@ -7,6 +7,7 @@ async def main():
         async with client.get("https://httpbin.org/") as resp:
             body = await resp.read()
             print(body)
+            print(resp)
 
 
 trio.run(main)
