@@ -5,6 +5,7 @@ import trio
 import yarl
 from celox.connection import DirectConnection, ProxyConnection
 from celox import (
+    ProxyConnectionSSLError,
     Timeout,
     Connector,
     ConnectionTimeout,
@@ -89,7 +90,7 @@ async def test_direct_connection_os_error():
 
 async def test_direct_connection_ssl_error():
     async with DirectConnection(
-        "expired.badssl.com",  # let's hope nothings on here
+        "expired.badssl.com",
         443,
         create_ssl_context(),
         Timeout(),
@@ -101,10 +102,44 @@ async def test_direct_connection_ssl_error():
 async def test_proxy_connection_invalid_proxy():
     with pytest.raises(InvalidProxy):
         async with ProxyConnection(
-            "httpbin.org",  # let's hope nothings on here
+            "httpbin.org",
             443,
             "badprotocol://test.com",
             create_ssl_context(),
             Timeout(),
         ) as conn:
             await conn.connect_tcp()
+
+
+async def test_proxy_connection_http():
+    async with ProxyConnection(
+        "httpbin.org",
+        80,
+        "http://54.38.78.155:8080",
+        create_ssl_context(),
+        Timeout(),
+    ) as conn:
+        await conn.connect_tcp()
+
+
+async def test_proxy_connection_https():
+    async with ProxyConnection(
+        "httpbin.org",
+        443,
+        "http://93.158.214.155:3128",
+        create_ssl_context(),
+        Timeout(),
+    ) as conn:
+        await conn.connect_ssl()
+
+
+async def test_proxy_connection_ssl_error():
+    async with ProxyConnection(
+        "expired.badssl.com",
+        443,
+        "http://93.158.214.155:3128",
+        create_ssl_context(),
+        Timeout(),
+    ) as conn:
+        with pytest.raises(ProxyConnectionSSLError):
+            await conn.connect_ssl()
