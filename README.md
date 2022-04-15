@@ -1,7 +1,7 @@
 # Celox  – an aiohttp-esque HTTP/1.1 client built with trio
 
 ![Tests](https://github.com/418Coffee/celox/actions/workflows/tests.yaml/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/418Coffee/celox/badge.svg?branch=main&service=github)](https://coveralls.io/github/418Coffee/celox?branch=main&service=github)
+[![Coverage Status](https://coveralls.io/repos/github/418Coffee/celox/badge.svg?branch=main&service=github&kill_cache=1)](https://coveralls.io/github/418Coffee/celox?branch=main&service=github)
 
 A minimalistic, fast and straightforward HTTP/1.1 client built using [trio](https://github.com/python-trio/trio) as a backend.
 
