@@ -105,6 +105,8 @@ class Response:
 
     def _parse_headers(self, headers: Union[bytes, bytearray]) -> CIMultiDict[str]:
         hdrs: CIMultiDict[str] = CIMultiDict()
+        if len(headers) < 1:
+            return hdrs
         lines = headers.split(b"\r\n")
         for header_line in lines:
             if self._is_line_obviously_invalid_request_line(header_line):

@@ -361,7 +361,7 @@ class ProxyConnection(BaseConnection):
         except BrokenResourceError as e:
             cause = e.__cause__
             if isinstance(cause, ssl.SSLCertVerificationError):
-                raise ConnectionSSLError(
+                raise ProxyConnectionSSLError(
                     cause.library,
                     cause.reason,
                     f"certificate verify failed: {cause.verify_message}",
@@ -499,7 +499,21 @@ class HTTPConnection:
         # In a later stadium (i.e. setting the body on the Response object) we can still copy it.
         assert status_line_and_headers is not None
         already_received_body = buf._buf
-        status_line, headers = status_line_and_headers.split(b"\r\n", maxsplit=1)
+        # RFC5322 says that response messages headers (and body, ofcourse) are optional.
+        # That means that we can't split by CRLF and unpack the result.
+        # If a message consists of only a status line than there is no CRLF in status_line_and_headers and unpacking fails.
+        # By utilizing find, we can check if the message contains headers, we validate if a CRLF is in status_line_and_headers.
+        first_crlf = status_line_and_headers.find(b"\r\n")
+        # find returns -1 on failure.
+        if first_crlf < 0:
+            status_line, headers = status_line_and_headers, b""
+        else:
+            # There is a CRLF that means that there is atleast one header.
+            # We split by indexing.
+            status_line, headers = (
+                status_line_and_headers[0:first_crlf],
+                status_line_and_headers[first_crlf + 2 :],
+            )
 
         async def read_callback():
             # Have we already read the body?
@@ -690,8 +704,8 @@ class Connector:
         return self._closed
 
     def _available_connections(self, cached: Union[Cache, None]) -> int:
-        # Is our limit == 0, aka we don't have a limit.
-        if not self._limit:
+        # Is our limit < 0, aka we don't have a limit.
+        if self._limit < 0:
             # Yes, we can always create a connection.
             return 1
         # No, calculate how many connections we have left.
