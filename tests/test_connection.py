@@ -111,6 +111,10 @@ async def test_proxy_connection_invalid_proxy():
             await conn.connect_tcp()
 
 
+# The proxies below are outdated...
+
+
+@pytest.mark.skip
 async def test_proxy_connection_http():
     async with ProxyConnection(
         "httpbin.org",
@@ -122,6 +126,7 @@ async def test_proxy_connection_http():
         await conn.connect_tcp()
 
 
+@pytest.mark.skip
 async def test_proxy_connection_https():
     async with ProxyConnection(
         "httpbin.org",
@@ -133,6 +138,7 @@ async def test_proxy_connection_https():
         await conn.connect_ssl()
 
 
+@pytest.mark.skip
 async def test_proxy_connection_ssl_error():
     async with ProxyConnection(
         "expired.badssl.com",
