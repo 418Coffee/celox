@@ -704,8 +704,8 @@ class Connector:
         return self._closed
 
     def _available_connections(self, cached: Union[Cache, None]) -> int:
-        # Is our limit < 0, aka we don't have a limit.
-        if self._limit < 0:
+        # Is our limit <= 0, aka we don't have a limit.
+        if self._limit <= 0:
             # Yes, we can always create a connection.
             return 1
         # No, calculate how many connections we have left.
