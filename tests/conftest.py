@@ -30,6 +30,10 @@ def _http_message():
     )
 
 
+def _http_message_no_headers():
+    return b"HTTP/1.1 200 OK\r\n\r\n"
+
+
 def _http_message_no_body():
     return (
         b"HTTP/1.1 200 OK\r\n"
@@ -89,6 +93,7 @@ def _http_message_chunked_trailers() -> "tuple[bytes, list[str]]":
 
 
 _http_message_bytes = _http_message()
+_http_message_no_headers_bytes = _http_message_no_headers()
 _http_message_no_body_bytes = _http_message_no_body()
 _http_message_chunked_bytes = [chunk for chunk in _http_message_chunked()]
 _http_message_chunked_trailers_bytes = [
@@ -100,6 +105,12 @@ async def http_handler(stream: trio.SocketStream):
     async with trio.open_nursery() as nursery:
         nursery.start_soon(stream.receive_some)
         nursery.start_soon(stream.send_all, _http_message_bytes)
+
+
+async def http_handler_no_headers(stream: trio.SocketStream):
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(stream.receive_some)
+        nursery.start_soon(stream.send_all, _http_message_no_headers_bytes)
 
 
 async def http_handler_no_body(stream: trio.SocketStream):

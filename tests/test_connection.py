@@ -2,7 +2,6 @@ from itertools import count
 
 import pytest
 import trio
-import yarl
 from celox.connection import DirectConnection, ProxyConnection
 from celox import (
     ProxyConnectionSSLError,
@@ -51,14 +50,50 @@ async def test_connector_limit_similair_connection():
                 nursery.start_soon(try_connect, next(id), c)
 
 
+async def test_closed_connector():
+    with pytest.raises(RuntimeError):
+        async with Connector() as c:
+            await c.close()
+            await c.acquire(
+                "localhost", 80, create_ssl_context(), Timeout(5, 5, 5, 5), None
+            )
+
+
+async def test_full_connector():
+    with pytest.raises(trio.MultiError):
+        async with Connector(limit=1) as c:
+            async with trio.open_nursery() as nursery:
+                nursery.start_soon(
+                    c.acquire,
+                    "localhost",
+                    80,
+                    create_ssl_context(),
+                    Timeout(5, 5, 5, 5),
+                    None,
+                )
+                nursery.start_soon(
+                    c.acquire,
+                    "localhost",
+                    80,
+                    create_ssl_context(),
+                    Timeout(5, 5, 5, 5),
+                    None,
+                )
+                await c.close()
+
+
 @pytest.mark.parametrize("direct_connection", [http_handler], indirect=True)
-async def test_direct_connection_invalid_configuration(
+async def test_direct_connection_runtime_errors(
     direct_connection: DirectConnection,
 ):
+    await direct_connection.connect_tcp()
     await direct_connection.connect_tcp()
     direct_connection._ssl = True
     with pytest.raises(RuntimeError):
         await direct_connection.connect_tcp()
+    direct_connection._ssl = False
+    with pytest.raises(RuntimeError):
+        await direct_connection.connect_ssl()
 
 
 @pytest.mark.parametrize("direct_connection", [http_handler], indirect=True)
